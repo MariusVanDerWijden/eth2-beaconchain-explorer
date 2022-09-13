@@ -384,6 +384,10 @@ func doFullCheck(client rpc.Client) {
 			logger.Printf("skipping export of epoch %v as it has errored %d times", epoch, epochBlacklist[epoch])
 			continue
 		}
+		if epoch < 146_487 {
+			logger.Printf("skipping epoch %v, marius says hi", epoch)
+			continue
+		}
 
 		logger.Printf("exporting epoch %v", epoch)
 
