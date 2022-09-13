@@ -223,7 +223,7 @@ func Start(client rpc.Client) error {
 
 	newBlockChan := client.GetNewBlockChan()
 
-	lastExportedSlot := uint64(0)
+	lastExportedSlot := uint64(4_687_506)
 
 	doFullCheck(client)
 
