@@ -66,6 +66,7 @@ require (
 	github.com/envoyproxy/protoc-gen-validate v0.1.0 // indirect
 	github.com/googleapis/enterprise-certificate-proxy v0.1.0 // indirect
 	github.com/googleapis/go-type-adapters v1.0.0 // indirect
+	github.com/mariusvanderwijden/threadpool v0.0.0-20210108190655-bfdb9c609f0f // indirect
 )
 
 require (

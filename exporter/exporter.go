@@ -13,6 +13,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/mariusvanderwijden/threadpool"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/sync/errgroup"
 )
@@ -379,27 +380,29 @@ func doFullCheck(client rpc.Client) {
 		return keys[i] < keys[j]
 	})
 
+	pool := threadpool.NewThreadPool(16)
 	for _, epoch := range keys {
+		if epoch < 146_487 {
+			continue
+		}
 		if epochBlacklist[epoch] > 3 {
 			logger.Printf("skipping export of epoch %v as it has errored %d times", epoch, epochBlacklist[epoch])
 			continue
 		}
-		if epoch < 146_487 {
-			logger.Printf("skipping epoch %v, marius says hi", epoch)
-			continue
-		}
 
-		logger.Printf("exporting epoch %v", epoch)
+		pool.Get(1)
+		go func(epoch uint64) {
+			defer pool.Put(1)
+			logger.Printf("exporting epoch %v", epoch)
 
-		err = ExportEpoch(epoch, client)
-
-		if err != nil {
-			logger.Errorf("error exporting epoch: %v", err)
-			if utils.EpochToTime(epoch).Before(time.Now().Add(time.Hour * -24)) {
-				epochBlacklist[epoch]++
+			if err = ExportEpoch(epoch, client); err != nil {
+				logger.Errorf("error exporting epoch: %v", err)
+				if utils.EpochToTime(epoch).Before(time.Now().Add(time.Hour * -24)) {
+					epochBlacklist[epoch]++
+				}
 			}
-		}
-		logger.Printf("finished export for epoch %v", epoch)
+			logger.Printf("finished export for epoch %v", epoch)
+		}(epoch)
 	}
 
 	logger.Infof("marking orphaned blocks of epochs %v-%v", startEpoch, head.HeadEpoch)
@@ -481,7 +484,7 @@ func ExportEpoch(epoch uint64, client rpc.Client) error {
 
 	startGetEpochData := time.Now()
 	logger.Printf("retrieving data for epoch %v", epoch)
-	data, err := client.GetEpochData(epoch, false)
+	data, err := client.GetEpochData(epoch, true)
 	if err != nil {
 		return fmt.Errorf("error retrieving epoch data: %v", err)
 	}
