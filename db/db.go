@@ -731,21 +731,23 @@ func SaveEpoch(data *types.EpochData) error {
 		return fmt.Errorf("error saving blocks to db: %w", err)
 	}
 
-	if uint64(utils.TimeToEpoch(time.Now())) > data.Epoch+10 {
-		logger.WithFields(logrus.Fields{"exportEpoch": data.Epoch, "chainEpoch": utils.TimeToEpoch(time.Now())}).Infof("skipping exporting validators because epoch is far behind head")
-	} else if found {
-		logger.WithFields(logrus.Fields{"exportEpoch": data.Epoch, "chainEpoch": utils.TimeToEpoch(time.Now())}).Infof("skipping exporting validators because validator status for that epoch has already been exported")
-	} else {
-		logger.Infof("exporting validators")
-		err = saveValidators(data, tx)
-		if err != nil {
-			return fmt.Errorf("error saving validators to db: %w", err)
+	/*
+		if uint64(utils.TimeToEpoch(time.Now())) > data.Epoch+10 {
+			logger.WithFields(logrus.Fields{"exportEpoch": data.Epoch, "chainEpoch": utils.TimeToEpoch(time.Now())}).Infof("skipping exporting validators because epoch is far behind head")
+		} else if found {
+			logger.WithFields(logrus.Fields{"exportEpoch": data.Epoch, "chainEpoch": utils.TimeToEpoch(time.Now())}).Infof("skipping exporting validators because validator status for that epoch has already been exported")
+		} else {
+			logger.Infof("exporting validators")
+			err = saveValidators(data, tx)
+			if err != nil {
+				return fmt.Errorf("error saving validators to db: %w", err)
+			}
+			err = updateQueueDeposits()
+			if err != nil {
+				return fmt.Errorf("error updating queue deposits cache: %w", err)
+			}
 		}
-		err = updateQueueDeposits()
-		if err != nil {
-			return fmt.Errorf("error updating queue deposits cache: %w", err)
-		}
-	}
+	*/
 	logger.Infof("exporting proposal assignments data")
 	err = saveValidatorProposalAssignments(data.Epoch, data.ValidatorAssignmentes.ProposerAssignments, tx)
 	if err != nil {
@@ -772,16 +774,17 @@ func SaveEpoch(data *types.EpochData) error {
 	// })
 
 	// only export recent validator balances if the epoch is within the threshold
-	if uint64(utils.TimeToEpoch(time.Now())) > data.Epoch+10 {
-		logger.WithFields(logrus.Fields{"exportEpoch": data.Epoch, "chainEpoch": utils.TimeToEpoch(time.Now())}).Infof("skipping exporting recent validator balance because epoch is far behind head")
-	} else {
-		logger.Infof("exporting recent validator balance")
-		err = saveValidatorBalancesRecent(data.Epoch, data.Validators, tx)
-		if err != nil {
-			return fmt.Errorf("error saving recent validator balances to db: %w", err)
+	/*
+		if uint64(utils.TimeToEpoch(time.Now())) > data.Epoch+10 {
+			logger.WithFields(logrus.Fields{"exportEpoch": data.Epoch, "chainEpoch": utils.TimeToEpoch(time.Now())}).Infof("skipping exporting recent validator balance because epoch is far behind head")
+		} else {
+			logger.Infof("exporting recent validator balance")
+			err = saveValidatorBalancesRecent(data.Epoch, data.Validators, tx)
+			if err != nil {
+				return fmt.Errorf("error saving recent validator balances to db: %w", err)
+			}
 		}
-	}
-
+	*/
 	logger.Infof("exporting epoch statistics data")
 	proposerSlashingsCount := 0
 	attesterSlashingsCount := 0
@@ -859,11 +862,12 @@ func SaveEpoch(data *types.EpochData) error {
 	if err != nil {
 		return fmt.Errorf("error executing save epoch statement: %w", err)
 	}
-
-	err = saveGraffitiwall(data.Blocks, tx)
-	if err != nil {
-		return fmt.Errorf("error saving graffitiwall: %w", err)
-	}
+	/*
+		err = saveGraffitiwall(data.Blocks, tx)
+		if err != nil {
+			return fmt.Errorf("error saving graffitiwall: %w", err)
+		}
+	*/
 	err = tx.Commit()
 	if err != nil {
 		return fmt.Errorf("error committing db transaction: %w", err)
