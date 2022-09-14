@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"sort"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/mariusvanderwijden/threadpool"
@@ -381,6 +382,7 @@ func doFullCheck(client rpc.Client) {
 	})
 
 	pool := threadpool.NewThreadPool(16)
+	var wg sync.WaitGroup
 	for _, epoch := range keys {
 		if epoch < 146_487 {
 			continue
@@ -391,8 +393,10 @@ func doFullCheck(client rpc.Client) {
 		}
 
 		pool.Get(1)
+		wg.Add(1)
 		go func(epoch uint64) {
 			defer pool.Put(1)
+			defer wg.Done()
 			logger.Printf("exporting epoch %v", epoch)
 
 			if err = ExportEpoch(epoch, client); err != nil {
@@ -404,6 +408,7 @@ func doFullCheck(client rpc.Client) {
 			logger.Printf("finished export for epoch %v", epoch)
 		}(epoch)
 	}
+	wg.Wait()
 
 	logger.Infof("marking orphaned blocks of epochs %v-%v", startEpoch, head.HeadEpoch)
 	err = MarkOrphanedBlocks(startEpoch, head.HeadEpoch, nodeBlocks)
