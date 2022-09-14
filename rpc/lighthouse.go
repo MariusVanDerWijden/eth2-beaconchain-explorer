@@ -886,7 +886,7 @@ var notFoundErr = errors.New("not found 404")
 func (lc *LighthouseClient) get(url string) ([]byte, error) {
 	// t0 := time.Now()
 	// defer func() { fmt.Println(url, time.Since(t0)) }()
-	client := &http.Client{Timeout: time.Second * 120}
+	client := &http.Client{Timeout: time.Second * 240}
 	resp, err := client.Get(url)
 	if err != nil {
 		return nil, err
