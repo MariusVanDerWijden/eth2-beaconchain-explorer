@@ -384,7 +384,7 @@ func doFullCheck(client rpc.Client) {
 	pool := threadpool.NewThreadPool(16)
 	var wg sync.WaitGroup
 	for _, epoch := range keys {
-		if epoch < 146_487 {
+		if epoch < 146_721 {
 			continue
 		}
 		if epochBlacklist[epoch] > 3 {
